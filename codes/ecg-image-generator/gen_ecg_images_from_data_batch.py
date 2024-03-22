@@ -71,6 +71,8 @@ def get_parser():
     parser.add_argument('--wrinkles',action='store_true',default=False)
     parser.add_argument('--augment',action='store_true',default=False)
     parser.add_argument('--bbox',action='store_true',default=False)
+    #Haoliang
+    parser.add_argument('--masking',action='store_true',default=False)
 
     return parser
 
@@ -102,13 +104,11 @@ def run(args):
 
             folder_struct_list = full_header_file.split('/')[:-1]
             args.output_directory = os.path.join(original_output_dir, '/'.join(folder_struct_list))
+            
             i += run_single_file(args)
 
             if(args.num_images != -1 and i >= args.num_images):
                 break
 
 if __name__=='__main__':
-    path = os.path.join(os.getcwd(), sys.argv[0])
-    parentPath = os.path.dirname(path)
-    os.chdir(parentPath)
     run(get_parser().parse_args(sys.argv[1:]))

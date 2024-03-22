@@ -92,7 +92,8 @@ def ecg_plot(
         x_grid = 0,
         standard_colours = False,
         bbox = False,
-        print_txt=False
+        print_txt=False,
+        masking=False
         ):
     #Inputs :
     #ecg - Dictionary of ecg signal with lead names as keys
@@ -177,6 +178,22 @@ def ecg_plot(
         )
 
     fig.suptitle(title)
+    if(masking):
+        fig1, ax1 = plt.subplots(figsize=(width, height))
+   
+        fig1.subplots_adjust(
+            hspace = 0, 
+            wspace = 0,
+            left   = 0,  
+            right  = 1,  
+            bottom = 0,  
+            top    = 1
+            )
+        fig1.suptitle(title)
+        fig1.patch.set_facecolor('black')
+
+        # Set the background color of the axes to black
+        ax1.set_facecolor('black')   
 
     #Mark grid based on whether we want black and white or colour
     
@@ -233,6 +250,12 @@ def ecg_plot(
     ax.tick_params(axis='x', colors='white')
     ax.tick_params(axis='y', colors='white')
     lead_num = 0
+    if(masking):
+        ax1.grid(False)
+        ax1.set_ylim(y_min,y_max)
+        ax1.set_xlim(x_min,x_max)
+        ax1.tick_params(axis='x', colors='white')
+        ax1.tick_params(axis='y', colors='white')
     
     #Step size will be number of seconds per sample i.e 1/sampling_rate
     step = (1.0/sample_rate)
@@ -247,6 +270,8 @@ def ecg_plot(
     text_bbox = []
     lead_bbox = []
     
+    # Haoliang: plotting loop
+    # if (masking): mask = np.zeros((int(height * resolution), int(width * resolution)), dtype=np.uint8)
     for i in np.arange(len(lead_index)):
         if len(lead_index) == 12:
             leadName = leadNames_12[i]
@@ -271,20 +296,20 @@ def ecg_plot(
 
         #Print lead name at .5 ( or 5 mm distance) from plot
         if(show_lead_name):
-                    t1 = ax.text(x_offset + x_gap, 
-                            y_offset-lead_name_offset - 0.2, 
-                            leadName, 
-                            fontsize=lead_fontsize)
-                    
-                    if (store_text_bbox):
-                        renderer1 = fig.canvas.get_renderer()
-                        transf = ax.transData.inverted()
-                        bb = t1.get_window_extent()    
-                        x1 = bb.x0*resolution/fig.dpi      
-                        y1 = bb.y0*resolution/fig.dpi   
-                        x2 = bb.x1*resolution/fig.dpi     
-                        y2 = bb.y1*resolution/fig.dpi              
-                        text_bbox.append([x1, y1, x2, y2, leadName])
+            t1 = ax.text(x_offset + x_gap, 
+                    y_offset-lead_name_offset - 0.2, 
+                    leadName, 
+                    fontsize=lead_fontsize)
+            
+            if (store_text_bbox):
+                renderer1 = fig.canvas.get_renderer()
+                transf = ax.transData.inverted()
+                bb = t1.get_window_extent()    
+                x1 = bb.x0*resolution/fig.dpi      
+                y1 = bb.y0*resolution/fig.dpi   
+                x2 = bb.x1*resolution/fig.dpi     
+                y2 = bb.y1*resolution/fig.dpi              
+                text_bbox.append([x1, y1, x2, y2, leadName])
                         
         #If we are plotting the first row-1 plots, we plot the dc pulse prior to adding the waveform
         if(columns == 1 and i in np.arange(0,rows)):
@@ -323,6 +348,14 @@ def ecg_plot(
                 linewidth=line_width, 
                 color=color_line
                 )
+        # if(masking):
+        #     t2 = ax1.plot(np.arange(0,len(ecg[leadName])*step,step) + x_offset + dc_offset + x_gap, 
+        #         ecg[leadName] + y_offset,
+        #         linewidth=line_width, 
+        #         color=(1,1,1)
+        #         )
+        
+
         if (bbox):
             renderer1 = fig.canvas.get_renderer()
             transf = ax.transData.inverted()
@@ -382,6 +415,28 @@ def ecg_plot(
                     linewidth=line_width, 
                     color=color_line
                     )
+        if(masking):
+            t2 = ax1.plot(np.arange(0,len(ecg['full'+full_mode])*step,step) + x_gap + dc_full_lead_offset, 
+                    ecg['full'+full_mode] + row_height/2-lead_name_offset + 0.8,
+                    linewidth=line_width, 
+                    color=(1,1,1)
+                    )
+        
+        # # Haoliang code
+        # if(masking):
+        #     ecg_signal = ecg['full'+full_mode]
+        #     y_values = ecg_signal + row_height/2-lead_name_offset + 0.8
+        #     x_values = np.arange(0,len(ecg['full'+full_mode])*step,step) + x_gap + dc_full_lead_offset
+
+        #     # Convert plot coordinates to pixel positions on the mask
+        #     x_pixels = np.round(x_values * resolution).astype(int)
+        #     y_pixels = np.round((height-y_values) * resolution).astype(int)  # Inverting y-axis because image coordinates are top-down
+
+        #     # Draw the ECG signal on the mask
+        #     for xp, yp in zip(x_pixels, y_pixels):
+        #         if 0 <= xp < mask.shape[1] and 0 <= yp < mask.shape[0]:
+        #             mask[yp, xp] = 1  # Set the pixel to white
+
 
         if (bbox):
             renderer1 = fig.canvas.get_renderer()
@@ -432,10 +487,10 @@ def ecg_plot(
     ax.text(2, 0.5, '25mm/s', fontsize=lead_fontsize)
     ax.text(4, 0.5, '10mm/mV', fontsize=lead_fontsize)
     
-    plt.savefig(os.path.join(output_dir,tail +'.png'),dpi=resolution)
+    fig.savefig(os.path.join(output_dir,tail +'.png'),dpi=resolution)
     plt.close(fig)
-    plt.clf()
-    plt.cla()
+    fig.clf()
+    ax.cla()
 
     if pad_inches!=0:
         
@@ -453,10 +508,32 @@ def ecg_plot(
         
         result_image.save(os.path.join(output_dir,tail +'.png'))
 
-        plt.close('all')
+        fig.close()
         plt.close(fig)
-        plt.clf()
-        plt.cla()
+        fig.clf()
+        ax.cla()
+
+    if(masking):
+        file_path = os.path.join(output_dir, 'masks', tail + '.png')  # Final file path
+
+        # Ensure the masks directory exists
+        masks_dir = os.path.join(output_dir, 'masks')
+        if not os.path.exists(masks_dir):
+            os.makedirs(masks_dir)
+
+        # Save the current figure to a temporary file
+        fig1.savefig(file_path, dpi=resolution)
+        plt.close(fig1)
+        fig1.clf()
+        ax1.cla()
+    # Haoliang code
+    # if(masking):
+    #     if(os.path.exists(os.path.join(output_dir, 'masks'))  == False):
+    #         os.mkdir(os.path.join(output_dir, 'masks'))
+        
+        
+    #     mask = Image.fromarray(mask * 255)
+    #     mask.save(os.path.join(output_dir, 'masks', tail + '.png'))
 
     if(store_text_bbox):
         if(os.path.exists(os.path.join(output_dir, 'text_bounding_box'))  == False):

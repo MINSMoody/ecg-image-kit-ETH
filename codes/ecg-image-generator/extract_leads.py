@@ -18,7 +18,7 @@ import random
 format_4_by_3 = [["I", "II", "III"], ["aVR", "aVL", "aVF", "AVR", "AVL", "AVF"], ["V1", "V2", "V3"], ["V4", "V5", "V6"]]
 
 # Run script.
-def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,add_bw,show_grid,add_print, start_index = -1, store_configs=False, store_text_bbox=True,key='val',resolution=100,units='inches',papersize='',add_lead_names=True,pad_inches=1,template_file=os.path.join('TemplateFiles','TextFile1.txt'),font_type=os.path.join('Fonts','Times_New_Roman.ttf'),standard_colours=5,full_mode='II',bbox = False,columns=-1):
+def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,add_bw,show_grid,add_print, masking, start_index = -1, store_configs=False, store_text_bbox=True,key='val',resolution=100,units='inches',papersize='',add_lead_names=True,pad_inches=1,template_file=os.path.join('TemplateFiles','TextFile1.txt'),font_type=os.path.join('Fonts','Times_New_Roman.ttf'),standard_colours=5,full_mode='II',bbox = False,columns=-1):
 
     # Extract a reduced-lead set from each pair of full-lead header and recording files.
     full_header_file = header_file
@@ -237,7 +237,7 @@ def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,ad
 
         rec_file = name + '-' + str(i)
         
-        x_grid,y_grid = ecg_plot(ecg_frame[i],full_header_file=full_header_file, style=grid_colour, sample_rate = rate,columns=columns,rec_file_name = rec_file, output_dir = output_directory, resolution = resolution, pad_inches = pad_inches, lead_index=full_leads, full_mode = full_mode, store_text_bbox = store_text_bbox, show_lead_name=add_lead_names,show_dc_pulse=dc,papersize=papersize,show_grid=(grid),standard_colours=standard_colours,bbox=bbox, print_txt=print_txt)
+        x_grid,y_grid = ecg_plot(ecg_frame[i],full_header_file=full_header_file, style=grid_colour, sample_rate = rate,columns=columns,rec_file_name = rec_file, output_dir = output_directory, resolution = resolution, pad_inches = pad_inches, lead_index=full_leads, full_mode = full_mode, store_text_bbox = store_text_bbox, show_lead_name=add_lead_names,show_dc_pulse=dc,papersize=papersize,show_grid=(grid),standard_colours=standard_colours,bbox=bbox, print_txt=print_txt, masking=masking)
 
         rec_head, rec_tail = os.path.split(rec_file)
 
